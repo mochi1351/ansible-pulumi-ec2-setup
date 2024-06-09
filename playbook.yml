@@ -1,0 +1,11 @@
+---
+- name: Deploy and configure AWS EC2 instance
+  hosts: localhost
+  roles:
+    - role: deploy_pulumi
+
+- name: Configure EC2 instance
+  hosts: ec2_instance
+  become: yes
+  roles:
+    - role: configure_ec2

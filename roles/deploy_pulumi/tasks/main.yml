@@ -1,0 +1,59 @@
+---
+- name: Ensure Python3 is installed
+  apt:
+    name: python3
+    state: present
+  become: yes
+
+- name: Ensure pip3 is installed
+  apt:
+    name: python3-pip
+    state: present
+  become: yes
+
+- name: Ensure Pulumi is installed
+  shell: |
+    curl -fsSL https://get.pulumi.com | sh
+  args:
+    creates: /usr/local/bin/pulumi
+  become: yes
+
+- name: Install Pulumi AWS package
+  pip:
+    name: pulumi-aws
+    executable: pip3
+
+- name: Create Pulumi project directory
+  file:
+    path: ~/pulumi_project
+    state: directory
+
+- name: Copy Pulumi program
+  template:
+    src: pulumi_script.py
+    dest: ~/pulumi_project/__main__.py
+
+- name: Initialize Pulumi project
+  shell: |
+    cd ~/pulumi_project
+    pulumi init --non-interactive
+  args:
+    creates: ~/pulumi_project/Pulumi.yaml
+
+- name: Run Pulumi up
+  shell: |
+    cd ~/pulumi_project
+    pulumi up --yes
+
+- name: Get instance public DNS
+  shell: |
+    cd ~/pulumi_project
+    pulumi stack output instance_public_dns
+  register: pulumi_output
+
+- name: Add instance to inventory
+  add_host:
+    name: ec2_instance
+    ansible_host: "{{ pulumi_output.stdout.strip() }}"
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: files/your-private-key

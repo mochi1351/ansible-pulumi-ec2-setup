@@ -1,0 +1,6 @@
+files/ssh-key
+venv/
+.pulumi/
+*.retry
+__pycache__/
+*.pyc

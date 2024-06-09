@@ -1,0 +1,67 @@
+---
+- name: Wait for SSH to come up
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+
+- name: Update and upgrade apt packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Create a new user
+  user:
+    name: "{{ new_username }}"
+    password: "{{ new_user_password | password_hash('sha512') }}"
+    groups: sudo
+    append: yes
+
+- name: Disable root user
+  user:
+    name: root
+    shell: /usr/sbin/nologin
+
+- name: Disable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+
+- name: Disable root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+
+- name: Restart SSH service
+  service:
+    name: ssh
+    state: restarted
+
+- name: Install git, curl, wget, docker, and docker-compose
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - git
+    - curl
+    - wget
+    - docker.io
+    - docker-compose
+
+- name: Add new user to docker group
+  user:
+    name: "{{ new_username }}"
+    groups: docker
+    append: yes
+
+- name: Ensure docker service is started
+  service:
+    name: docker
+    state: started
+    enabled: yes
