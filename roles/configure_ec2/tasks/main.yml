@@ -11,6 +11,8 @@
   apt:
     update_cache: yes
     upgrade: dist
+    autoclean: yes
+    autoremove: yes
 
 - name: Create a new user
   user:
