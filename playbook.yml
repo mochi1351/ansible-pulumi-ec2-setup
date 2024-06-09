@@ -1,4 +1,11 @@
 ---
+- name: Load environment variables
+  hosts: localhost
+  tasks:
+    - name: Load .env file
+      command: bash -c "export $(grep -v '^#' .env | xargs)"
+      register: env_vars
+
 - name: Deploy and configure AWS EC2 instance
   hosts: localhost
   roles:

@@ -1,6 +1,6 @@
-aws_region: us-west-2
-ssh_public_key: 'ssh-rsa AAAAB3...your-public-key... user@hostname'
-instance_type: t2.micro
-volume_size: 8
-new_username: newuser
-new_user_password: newpassword
+aws_region: "{{ lookup('env', 'AWS_REGION') }}"
+ssh_public_key: "{{ lookup('env', 'SSH_PUBLIC_KEY') }}"
+instance_type: "{{ lookup('env', 'INSTANCE_TYPE') }}"
+volume_size: "{{ lookup('env', 'VOLUME_SIZE') }}"
+new_username: "{{ lookup('env', 'NEW_USERNAME') }}"
+new_user_password: "{{ lookup('env', 'NEW_USER_PASSWORD') }}"

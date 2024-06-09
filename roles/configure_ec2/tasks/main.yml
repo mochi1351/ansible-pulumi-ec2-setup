@@ -38,12 +38,19 @@
     line: 'PermitRootLogin no'
     state: present
 
+- name: Allow only the new user to login via SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?AllowUsers'
+    line: 'AllowUsers {{ new_username }}'
+    state: present
+
 - name: Restart SSH service
   service:
     name: ssh
     state: restarted
 
-- name: Install git, curl, wget, docker, and docker-compose
+- name: Install git, curl, wget, docker, docker-compose, screen
   apt:
     name: "{{ item }}"
     state: present
@@ -53,6 +60,7 @@
     - wget
     - docker.io
     - docker-compose
+    - screen
 
 - name: Add new user to docker group
   user:
@@ -65,3 +73,34 @@
     name: docker
     state: started
     enabled: yes
+
+- name: Install latest Golang
+  become: yes
+  shell: >
+    wget -O go.tar.gz https://golang.org/dl/go{{ lookup('env', 'GO_VERSION') }}.linux-amd64.tar.gz &&
+    sudo tar -C /usr/local -xzf go.tar.gz &&
+    rm go.tar.gz
+
+- name: Add Golang to PATH
+  become: yes
+  lineinfile:
+    dest: /home/{{ new_username }}/.bashrc
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+
+- name: Run go version
+  become: yes
+  command: go version
+
+- name: Install NVM
+  become: yes
+  shell: >
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+
+- name: Load NVM in current shell session
+  become: yes
+  shell: >
+    source ~/.nvm/nvm.sh &&
+    echo "source ~/.nvm/nvm.sh" >> /home/{{ new_username }}/.bashrc
